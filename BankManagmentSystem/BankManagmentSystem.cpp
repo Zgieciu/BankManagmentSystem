@@ -5,7 +5,7 @@
 
 using namespace std;
 
-int ID = 0;
+int ID = 1;
 
 struct Date {
     int day;
@@ -43,15 +43,16 @@ bool checkDate(int day, int month, int year) {
 
 Data personData() {
     Data data;
-    cout << "Podaj imiê osoby:" << endl;
+    cout << "Podaj imiê: ";
     cin >> data.firstName;
-    cout << "Podaj nazwisko osoby:" << endl;
-    cin >> data.firstName;
+    cout << "Podaj nazwisko: ";
+    cin >> data.lastName;
     do {
-        cout << "Podaj dd/mm/yyyy (odzielone spacjami): " << endl;
+        cout << "Podaj datê urodzenia dd/mm/yyyy: ";
         cin >> data.date.day >> data.date.month >> data.date.year;
     } while (!checkDate(data.date.day, data.date.month, data.date.year));
-    
+    cout << "Podaj pesel: ";
+    cin >> data.pesel;
     return data;
 }
 
@@ -71,7 +72,14 @@ void addPerson(pointer* persons, Data data) {
 
 void showPersons(pointer persons) {
     while (persons != NULL) {
-        cout << persons->data.firstName << " " << persons->data.lastName << endl;
+        int day = persons->data.date.day;
+        int month = persons->data.date.month;
+        int year = persons->data.date.year;
+        cout << persons->personID << "." << persons->data.firstName << " " << persons->data.lastName << " ";
+        (day < 10 ? cout << "0" << day : cout << day) << "/";
+        (month < 10 ? cout << "0" << month : cout << month) << "/";
+        cout << year << " ";
+        cout << persons->data.pesel << endl;
         persons = persons->next;
     }
 }
@@ -81,7 +89,6 @@ int main()
     setlocale(LC_CTYPE, "Polish");
     pointer persons = NULL;
     int option = 0, enter;
-    Data data;
 
     while (option != 3) {
         cout << "SYSTEM ZARZ¥DZANIA BANKIEM" << endl;
@@ -95,18 +102,17 @@ int main()
 
         switch (option) {
             case 1:
-                data = personData();
+                Data data = personData();
                 addPerson(&persons, data);
                 break;
             case 2:
                 showPersons(persons);
                 break;
             case 3:
-                cout << "Dziêkujemy za u¿ycie programu ;)";
+                cout << "Dziêkujemy za u¿ycie programu.";
                 break;
             default:
-                cout << "Nie ma opcji o takim numerze, wybierz jeszcze raz: ";
-                cin >> option;
+                cout << "Nie ma opcji o takim numerze";
                 break;
         }
 
