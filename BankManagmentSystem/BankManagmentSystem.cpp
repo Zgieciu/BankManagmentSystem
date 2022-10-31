@@ -6,7 +6,7 @@
 
 using namespace std;
 
-int personID = 1;
+int personID = 1, accountID = 1;
 
 struct Date {
     int day;
@@ -14,16 +14,28 @@ struct Date {
     int year;
 };
 
-struct Data {
+struct PersonData {
     int personID;
+    int accountID;
     char firstName[30];
     char lastName[30];
     char pesel[11];
     Date date;
 };
 
+struct AccountData {
+    int accountNumber;
+    float amountOfMoney;
+    Date openedDate;
+};
+
+struct Account {
+    AccountData data;
+    Account* next;
+};
+
 struct Person {
-    Data data;
+    PersonData data;
     Person* next;
 };
 
@@ -42,8 +54,8 @@ bool checkDate(int day, int month, int year) {
         return true;
 }
 
-Data personData() {
-    Data data;
+PersonData personData() {
+    PersonData data;
     cout << "Podaj imiê: ";
     cin >> data.firstName;
     cout << "Podaj nazwisko: ";
@@ -52,12 +64,14 @@ Data personData() {
         cout << "Podaj datê urodzenia dd/mm/yyyy: ";
         cin >> data.date.day >> data.date.month >> data.date.year;
     } while (!checkDate(data.date.day, data.date.month, data.date.year));
-    cout << "Podaj pesel: ";
-    cin >> data.pesel;
+    do {
+        cout << "Podaj pesel: ";
+        cin >> data.pesel;
+    } while (strlen(data.pesel) != 11);
     return data;
 }
 
-void addPerson(pointer* persons, Data data) {
+void addPerson(pointer* persons, PersonData data) {
     pointer newPerson;
     newPerson = (Person*)malloc(sizeof(Person));
     newPerson->data = data;
@@ -87,7 +101,7 @@ void showPersons(pointer persons) {
 
 void savePersonsToFile(pointer persons) {
     FILE *file;
-    int size = sizeof(Data);
+    int size = sizeof(PersonData);
     file = fopen("persons.dat", "wb");
     if (file == NULL) return;
     while (persons != NULL) {
@@ -99,8 +113,8 @@ void savePersonsToFile(pointer persons) {
 
 void readPersonsFromFile(pointer *persons) {
     FILE* file;
-    int size = sizeof(Data);
-    Data data;
+    int size = sizeof(PersonData);
+    PersonData data;
     file = fopen("persons.dat", "rb");
     if (file == NULL) 
         return;
@@ -113,7 +127,7 @@ int main()
 {
     setlocale(LC_CTYPE, "Polish");
     pointer persons = NULL;
-    int option = 0, enter;
+    int option = 0, enter, accountCinID;
 
     readPersonsFromFile(&persons);
 
@@ -121,7 +135,8 @@ int main()
         cout << "SYSTEM ZARZ¥DZANIA BANKIEM" << endl;
         cout << "\n1.Dodaj u¿ytkownika";
         cout << "\n2.Wyœwietl u¿ytkowników";
-        cout << "\n3.Zakoñcz program\n" << endl;
+        cout << "\n3.Utwórz konto";
+        cout << "\n4.Zakoñcz program\n" << endl;
 
         cout << "Wybierz opcje: ";
         cin >> option;
@@ -129,13 +144,18 @@ int main()
 
         switch (option) {
             case 1:
-                Data data = personData();
+                PersonData data = personData();
                 addPerson(&persons, data);
                 break;
             case 2:
                 showPersons(persons);
                 break;
             case 3:
+                showPersons(persons);
+                cout << "Wybierz po ID u¿ytnownika któremu chcesz utworzyæ konto:";
+                cin >> accountCinID;
+                break;
+            case 4:
                 cout << "Dziêkujemy za u¿ycie programu.";
                 break;
             default:
@@ -143,7 +163,7 @@ int main()
                 break;
         }
 
-        if (option == 3) 
+        if (option == 4) 
             break;
         cout << "\nAby przejœæ dalej naciœnij ENTER";
         enter = getchar();
