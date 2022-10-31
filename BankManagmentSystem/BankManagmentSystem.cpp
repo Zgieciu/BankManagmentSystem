@@ -24,6 +24,7 @@ struct PersonData {
 };
 
 struct AccountData {
+    int accountID;
     int accountNumber;
     float amountOfMoney;
     Date openedDate;
@@ -40,6 +41,7 @@ struct Person {
 };
 
 typedef Person* pointer;
+typedef Account* pointerA;
 
 bool checkDate(int day, int month, int year) {
     SYSTEMTIME st;
@@ -52,6 +54,16 @@ bool checkDate(int day, int month, int year) {
         return false;
     else
         return true;
+}
+
+bool checkPersonID(int id, pointer persons) {
+    while (id != persons->data.personID) {
+        persons = persons->next;
+        if (persons == NULL) {
+            return false;
+        }
+    }
+    return true;
 }
 
 PersonData personData() {
@@ -68,6 +80,14 @@ PersonData personData() {
         cout << "Podaj pesel: ";
         cin >> data.pesel;
     } while (strlen(data.pesel) != 11);
+    data.accountID = NULL;
+    return data;
+}
+
+AccountData accountData() {
+    AccountData data;
+    cout << "Podaj iloœc pieniêdzy na start:";
+    cin >> data.amountOfMoney;
     return data;
 }
 
@@ -99,6 +119,17 @@ void showPersons(pointer persons) {
     }
 }
 
+void showAccounts(pointerA accounts, pointer persons) {
+    while (accounts != NULL) {
+        cout << accounts->data.accountID << "." << accounts->data.amountOfMoney;
+        while (persons->data.accountID != accounts->data.accountID) {
+            persons = persons->next;
+        }
+        cout << "  Owner:" << persons->data.pesel;
+        accounts = accounts->next;
+    }
+}
+
 void savePersonsToFile(pointer persons) {
     FILE *file;
     int size = sizeof(PersonData);
@@ -123,20 +154,38 @@ void readPersonsFromFile(pointer *persons) {
     fclose(file);
 }
 
+void addAccount(pointerA* accounts, pointer persons, AccountData data) {
+    pointerA newAccount;
+    newAccount = (Account*)malloc(sizeof(Account));
+    newAccount->data = data;
+    newAccount->data.accountID = accountID;
+    persons->data.accountID = accountID;
+    newAccount->next = NULL;
+    if ((*accounts) == NULL) {
+        (*accounts) = newAccount;
+        accountID++;
+    }
+    else
+        addAccount(&(*accounts)->next, persons, data);
+}
+
 int main()
 {
     setlocale(LC_CTYPE, "Polish");
     pointer persons = NULL;
-    int option = 0, enter, accountCinID;
+    pointerA accounts = NULL;
+    int option = 0, enter, personID;
+    bool check;
 
     readPersonsFromFile(&persons);
 
-    while (option != 3) {
+    while (option != 10) {
         cout << "SYSTEM ZARZ¥DZANIA BANKIEM" << endl;
         cout << "\n1.Dodaj u¿ytkownika";
         cout << "\n2.Wyœwietl u¿ytkowników";
-        cout << "\n3.Utwórz konto";
-        cout << "\n4.Zakoñcz program\n" << endl;
+        cout << "\n3.Wyœwietl konta";
+        cout << "\n4.Utwórz konto";
+        cout << "\n10.Zakoñcz program\n" << endl;
 
         cout << "Wybierz opcje: ";
         cin >> option;
@@ -144,30 +193,40 @@ int main()
 
         switch (option) {
             case 1:
-                PersonData data = personData();
-                addPerson(&persons, data);
+                PersonData pData = personData();
+                addPerson(&persons, pData);
                 break;
             case 2:
                 showPersons(persons);
                 break;
             case 3:
-                showPersons(persons);
-                cout << "Wybierz po ID u¿ytnownika któremu chcesz utworzyæ konto:";
-                cin >> accountCinID;
+                showAccounts(accounts, persons);
                 break;
             case 4:
-                cout << "Dziêkujemy za u¿ycie programu.";
+                showPersons(persons);
+                cout << "\nWybierz po ID u¿ytnownika któremu chcesz utworzyæ konto: ";
+                cin >> personID;
+                check = checkPersonID(personID, persons);
+                if (!check) {
+                    cout << "Nie ma u¿yktownika o podanym ID";
+                    break;
+                };
+                AccountData aData = accountData();
+                addAccount(&accounts, persons, aData);
+                break;
+            case 10:
+                cout << "Dziêkujemy za u¿ycie programu. Wszystkie dane zostan¹ zapisane do bazy danych.";
                 break;
             default:
                 cout << "Nie ma opcji o takim numerze";
                 break;
         }
 
-        if (option == 4) 
+        if (option == 10) 
             break;
         cout << "\nAby przejœæ dalej naciœnij ENTER";
-        enter = getchar();
         while (true) {
+            enter = getchar();
             if (cin.peek() == '\n')
                 break;
         }
