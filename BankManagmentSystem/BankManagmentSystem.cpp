@@ -17,7 +17,6 @@ struct Date {
 
 struct PersonData {
     int personID;
-    int accountID;
     char firstName[30];
     char lastName[30];
     char pesel[11];
@@ -26,6 +25,7 @@ struct PersonData {
 
 struct AccountData {
     int accountID;
+    int personID;
     int accountNumber;
     float amountOfMoney;
     Date openedDate;
@@ -81,7 +81,6 @@ PersonData personData() {
         cout << "Podaj pesel: ";
         cin >> data.pesel;
     } while (strlen(data.pesel) != 11);
-    data.accountID = NULL;
     return data;
 }
 
@@ -109,12 +108,12 @@ AccountData accountData(pointerA accounts) {
 }
 
 void addPerson(pointer* persons, PersonData data) {
-    pointer newPerson;
-    newPerson = (Person*)malloc(sizeof(Person));
-    newPerson->data = data;
-    newPerson->data.personID = personID;
-    newPerson->next = NULL;
     if ((*persons) == NULL){
+        pointer newPerson;
+        newPerson = (Person*)malloc(sizeof(Person));
+        newPerson->data = data;
+        newPerson->data.personID = personID;
+        newPerson->next = NULL;
         (*persons) = newPerson;
         personID++;
     } 
@@ -123,16 +122,13 @@ void addPerson(pointer* persons, PersonData data) {
 }
 
 void addAccount(pointerA* accounts, pointer persons, AccountData data, int ID) {
-    pointerA newAccount;
-    newAccount = (Account*)malloc(sizeof(Account));
-    newAccount->data = data;
-    newAccount->data.accountID = accountID;
-    while (persons->data.personID != ID) {
-        persons = persons->next;
-    }
-    persons->data.accountID = accountID;
-    newAccount->next = NULL;
     if ((*accounts) == NULL) {
+        pointerA newAccount;
+        newAccount = (Account*)malloc(sizeof(Account));
+        newAccount->data = data;
+        newAccount->data.accountID = accountID;
+        newAccount->data.personID = ID;
+        newAccount->next = NULL;
         (*accounts) = newAccount;
         accountID++;
     }
@@ -159,7 +155,7 @@ void showAccounts(pointerA accounts, pointer* persons) {
         pointer personsTMP = *persons;
         cout << accounts->data.accountID << ". Nr konta: " << accounts->data.accountNumber;
         cout << " Fundusze: " << accounts->data.amountOfMoney;
-        while (personsTMP->data.accountID != accounts->data.accountID) {
+        while (personsTMP->data.personID != accounts->data.personID) {
             personsTMP = personsTMP->next;
         }
         cout << "  W³aœciciel:" << personsTMP->data.pesel << endl;
