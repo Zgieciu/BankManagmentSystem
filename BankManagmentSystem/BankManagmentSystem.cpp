@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <winbase.h>
 #include <fstream>
+#include <ctime>
 
 using namespace std;
 
@@ -84,9 +85,25 @@ PersonData personData() {
     return data;
 }
 
-AccountData accountData() {
+AccountData accountData(pointerA accounts) {
     AccountData data;
-    cout << "Podaj iloœc pieniêdzy na start:";
+    bool check = true;
+    int random;
+    time_t ttime = time(0);
+    tm* local_time = localtime(&ttime);
+    data.openedDate.year = 1900 + local_time->tm_year;
+    data.openedDate.month = 1 + local_time->tm_mon;
+    data.openedDate.day = local_time->tm_mday;
+    while (check) {
+        random = rand() % 89999 + 10000;
+        data.accountNumber = random;
+        check = false;
+        while (accounts != NULL) {
+            if (accounts->data.accountNumber == data.accountNumber) check = true;
+            accounts = accounts->next;
+        }
+    } 
+    cout << "Podaj iloœc pieniêdzy na start: ";
     cin >> data.amountOfMoney;
     return data;
 }
@@ -105,6 +122,24 @@ void addPerson(pointer* persons, PersonData data) {
         addPerson(&(*persons)->next, data);
 }
 
+void addAccount(pointerA* accounts, pointer persons, AccountData data, int ID) {
+    pointerA newAccount;
+    newAccount = (Account*)malloc(sizeof(Account));
+    newAccount->data = data;
+    newAccount->data.accountID = accountID;
+    while (persons->data.personID != ID) {
+        persons = persons->next;
+    }
+    persons->data.accountID = accountID;
+    newAccount->next = NULL;
+    if ((*accounts) == NULL) {
+        (*accounts) = newAccount;
+        accountID++;
+    }
+    else
+        addAccount(&(*accounts)->next, persons, data, ID);
+}
+
 void showPersons(pointer persons) {
     while (persons != NULL) {
         int day = persons->data.date.day;
@@ -119,13 +154,15 @@ void showPersons(pointer persons) {
     }
 }
 
-void showAccounts(pointerA accounts, pointer persons) {
+void showAccounts(pointerA accounts, pointer* persons) {
     while (accounts != NULL) {
-        cout << accounts->data.accountID << "." << accounts->data.amountOfMoney;
-        while (persons->data.accountID != accounts->data.accountID) {
-            persons = persons->next;
+        pointer personsTMP = *persons;
+        cout << accounts->data.accountID << ". Nr konta: " << accounts->data.accountNumber;
+        cout << " Fundusze: " << accounts->data.amountOfMoney;
+        while (personsTMP->data.accountID != accounts->data.accountID) {
+            personsTMP = personsTMP->next;
         }
-        cout << "  Owner:" << persons->data.pesel;
+        cout << "  W³aœciciel:" << personsTMP->data.pesel << endl;
         accounts = accounts->next;
     }
 }
@@ -154,31 +191,15 @@ void readPersonsFromFile(pointer *persons) {
     fclose(file);
 }
 
-void addAccount(pointerA* accounts, pointer persons, AccountData data) {
-    pointerA newAccount;
-    newAccount = (Account*)malloc(sizeof(Account));
-    newAccount->data = data;
-    newAccount->data.accountID = accountID;
-    persons->data.accountID = accountID;
-    newAccount->next = NULL;
-    if ((*accounts) == NULL) {
-        (*accounts) = newAccount;
-        accountID++;
-    }
-    else
-        addAccount(&(*accounts)->next, persons, data);
-}
-
 int main()
 {
     setlocale(LC_CTYPE, "Polish");
     pointer persons = NULL;
     pointerA accounts = NULL;
     int option = 0, enter, personID;
-    bool check;
+    bool check;;
 
     readPersonsFromFile(&persons);
-
     while (option != 10) {
         cout << "SYSTEM ZARZ¥DZANIA BANKIEM" << endl;
         cout << "\n1.Dodaj u¿ytkownika";
@@ -200,7 +221,7 @@ int main()
                 showPersons(persons);
                 break;
             case 3:
-                showAccounts(accounts, persons);
+                showAccounts(accounts, &persons);
                 break;
             case 4:
                 showPersons(persons);
@@ -211,8 +232,8 @@ int main()
                     cout << "Nie ma u¿yktownika o podanym ID";
                     break;
                 };
-                AccountData aData = accountData();
-                addAccount(&accounts, persons, aData);
+                AccountData aData = accountData(accounts);
+                addAccount(&accounts, persons, aData, personID);
                 break;
             case 10:
                 cout << "Dziêkujemy za u¿ycie programu. Wszystkie dane zostan¹ zapisane do bazy danych.";
