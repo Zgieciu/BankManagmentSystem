@@ -67,6 +67,14 @@ bool checkPersonID(int id, pointer persons) {
     return true;
 }
 
+string checkOwner(pointerA accounts, pointer persons) {
+    if (persons == NULL) return "";
+    while (persons->data.personID != accounts->data.personID) {
+        persons = persons->next;
+    }
+    return persons->data.pesel;
+}
+
 PersonData personData() {
     PersonData data;
     cout << "Podaj imiê: ";
@@ -121,7 +129,7 @@ void addPerson(pointer* persons, PersonData data) {
         addPerson(&(*persons)->next, data);
 }
 
-void addAccount(pointerA* accounts, pointer persons, AccountData data, int ID) {
+void addAccount(pointerA* accounts, AccountData data, int ID) {
     if ((*accounts) == NULL) {
         pointerA newAccount;
         newAccount = (Account*)malloc(sizeof(Account));
@@ -133,7 +141,7 @@ void addAccount(pointerA* accounts, pointer persons, AccountData data, int ID) {
         accountID++;
     }
     else
-        addAccount(&(*accounts)->next, persons, data, ID);
+        addAccount(&(*accounts)->next, data, ID);
 }
 
 void showPersons(pointer persons) {
@@ -150,15 +158,11 @@ void showPersons(pointer persons) {
     }
 }
 
-void showAccounts(pointerA accounts, pointer* persons) {
+void showAccounts(pointerA accounts, pointer persons) {
     while (accounts != NULL) {
-        pointer personsTMP = *persons;
         cout << accounts->data.accountID << ". Nr konta: " << accounts->data.accountNumber;
         cout << " Fundusze: " << accounts->data.amountOfMoney;
-        while (personsTMP->data.personID != accounts->data.personID) {
-            personsTMP = personsTMP->next;
-        }
-        cout << "  W³aœciciel:" << personsTMP->data.pesel << endl;
+        cout << "  W³aœciciel:" << checkOwner(accounts, persons) << endl;
         accounts = accounts->next;
     }
 }
@@ -167,7 +171,8 @@ void savePersonsToFile(pointer persons) {
     FILE *file;
     int size = sizeof(PersonData);
     file = fopen("persons.dat", "wb");
-    if (file == NULL) return;
+    if (file == NULL) 
+        return;
     while (persons != NULL) {
         fwrite(&(persons->data), size, 1, file);
         persons = persons->next;
@@ -187,15 +192,41 @@ void readPersonsFromFile(pointer *persons) {
     fclose(file);
 }
 
+void saveAccountsToFile(pointerA accounts) {
+    FILE* file;
+    int size = sizeof(AccountData);
+    file = fopen("accounts.dat", "wb");
+    if (file == NULL) 
+        return;
+    while (accounts != NULL) {
+        fwrite(&(accounts->data), size, 1, file);
+        accounts = accounts->next;
+    }
+    fclose(file);
+}
+
+void readAccountsFromFile(pointerA* accounts) {
+    FILE* file;
+    int size = sizeof(AccountData);
+    AccountData data;
+    file = fopen("accounts.dat", "rb");
+    if (file == NULL) 
+        return;
+    while (fread(&data, size, 1, file) == 1)
+        addAccount(&(*accounts), data, data.personID);
+    fclose(file);
+}
+
 int main()
 {
     setlocale(LC_CTYPE, "Polish");
     pointer persons = NULL;
     pointerA accounts = NULL;
     int option = 0, enter, personID;
-    bool check;;
+    bool check;
 
     readPersonsFromFile(&persons);
+    readAccountsFromFile(&accounts);
     while (option != 10) {
         cout << "SYSTEM ZARZ¥DZANIA BANKIEM" << endl;
         cout << "\n1.Dodaj u¿ytkownika";
@@ -217,19 +248,20 @@ int main()
                 showPersons(persons);
                 break;
             case 3:
-                showAccounts(accounts, &persons);
+                showAccounts(accounts, persons);
                 break;
             case 4:
                 showPersons(persons);
                 cout << "\nWybierz po ID u¿ytnownika któremu chcesz utworzyæ konto: ";
                 cin >> personID;
                 check = checkPersonID(personID, persons);
-                if (!check) {
-                    cout << "Nie ma u¿yktownika o podanym ID";
-                    break;
-                };
+                while (!check) {
+                    cout << "Nie ma u¿yktownika o podanym ID. Podaj ID jeszcze raz: ";
+                    cin >> personID;
+                    check = checkPersonID(personID, persons);
+                }
                 AccountData aData = accountData(accounts);
-                addAccount(&accounts, persons, aData, personID);
+                addAccount(&accounts, aData, personID);
                 break;
             case 10:
                 cout << "Dziêkujemy za u¿ycie programu. Wszystkie dane zostan¹ zapisane do bazy danych.";
@@ -251,6 +283,7 @@ int main()
     }
     
     savePersonsToFile(persons);
+    saveAccountsToFile(accounts);
 
     return 0;
 }
