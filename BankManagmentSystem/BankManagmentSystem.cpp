@@ -58,13 +58,23 @@ bool checkDate(int day, int month, int year) {
 }
 
 bool checkPersonID(int id, pointer persons) {
-    while (id != persons->data.personID) {
-        if (persons == NULL) {
-            return false;
+    while (persons != NULL) {
+        if (id == persons->data.personID) {
+            return true;
         }
         persons = persons->next;  
     }
-    return true;
+    return false;
+}
+
+bool checkAccountNumber(int accountNumber, pointerA accounts) {
+    while (accounts != NULL) {
+        if (accounts->data.accountNumber == accountNumber) {
+            return true;
+        }
+        accounts = accounts->next;
+    }
+    return false;
 }
 
 string checkOwner(pointerA accounts, pointer persons) {
@@ -223,12 +233,29 @@ void readAccountsFromFile(pointerA* accounts) {
     fclose(file);
 }
 
+void depositWithdrawMoney(pointerA accounts, int money, int accountNumber, int type) {
+    while (accounts->data.accountNumber != accountNumber) {
+        accounts = accounts->next;
+    }
+    if (type == 1) {
+        accounts->data.amountOfMoney += money;
+    }
+    else if (type == 2) {
+        if (money > accounts->data.amountOfMoney) {
+            cout << "Brak wystarczj¹cych œrodków na koncie.";
+            return;
+        }
+        accounts->data.amountOfMoney -= money;
+    }
+    cout << "Stan konta po wykonaniu transakcji: " << accounts->data.amountOfMoney;
+}
+
 int main()
 {
     setlocale(LC_CTYPE, "Polish");
     pointer persons = NULL;
     pointerA accounts = NULL;
-    int option = 0, breakKey, personID;
+    int option = 0, breakKey, personID, depositOrWithdraw, accountNumber, amountOfMoney;
     bool check;
 
     readPersonsFromFile(&persons);
@@ -239,6 +266,7 @@ int main()
         cout << "\n2.Wyœwietl u¿ytkowników";
         cout << "\n3.Wyœwietl konta";
         cout << "\n4.Utwórz konto";
+        cout << "\n5.Wp³aæ / Wyp³aæ pieni¹dze";
         cout << "\n10.Zakoñcz program\n" << endl;
 
         cout << "Wybierz opcje: ";
@@ -272,6 +300,34 @@ int main()
                 }
                 AccountData aData = accountData(accounts);
                 addAccount(&accounts, aData, personID);
+                break;
+            case 5:
+                if (accounts == NULL) {
+                    cout << "Aktualnie w bazie nie ma kont, dlatego funkcja wp³aty i wyp³aty pieniêdzy jest zablokowana.";
+                    break;
+                }
+                cout << "Chcesz wyp³aciæ czy wp³aciæ pieni¹dze ? (wp³ata - 1, wyp³ata - 2): ";
+                cin >> depositOrWithdraw;
+                while (depositOrWithdraw != 1 && depositOrWithdraw != 2) {
+                    cout << "Poda³eœ z³¹ opcjê, wybiersz jeszcze raz: ";
+                    cin >> depositOrWithdraw;
+                }
+                cout << "WprowadŸ numer swojeg konta: ";
+                cin >> accountNumber;
+                check = checkAccountNumber(accountNumber, accounts);
+                while (!check) {
+                    cout << "Nie ma konta o wprowadzony numerze. Podaj numer konta jeszcze raz: ";
+                    cin >> accountNumber;
+                    check = checkAccountNumber(accountNumber, accounts);
+                }
+                if (depositOrWithdraw == 1) {
+                    cout << "Podaj iloœæ pieniêdzy do wp³aty: ";
+                }
+                else if (depositOrWithdraw == 2) {
+                    cout << "Podaj iloœæ pieniêdzy do wyp³aty: ";
+                }
+                cin >> amountOfMoney;
+                depositWithdrawMoney(accounts, amountOfMoney, accountNumber, depositOrWithdraw);
                 break;
             case 10:
                 cout << "Dziêkujemy za u¿ycie programu. Wszystkie dane zostan¹ zapisane do bazy danych.";
