@@ -59,10 +59,10 @@ bool checkDate(int day, int month, int year) {
 
 bool checkPersonID(int id, pointer persons) {
     while (id != persons->data.personID) {
-        persons = persons->next;
         if (persons == NULL) {
             return false;
         }
+        persons = persons->next;  
     }
     return true;
 }
@@ -145,6 +145,9 @@ void addAccount(pointerA* accounts, AccountData data, int ID) {
 }
 
 void showPersons(pointer persons) {
+    if (persons == NULL) {
+        cout << "Aktualnie w bazie nie ma u¿ytkowników.";
+    }
     while (persons != NULL) {
         int day = persons->data.date.day;
         int month = persons->data.date.month;
@@ -159,6 +162,9 @@ void showPersons(pointer persons) {
 }
 
 void showAccounts(pointerA accounts, pointer persons) {
+    if (accounts == NULL) {
+        cout << "Aktualnie w bazie nie ma kont.";
+    }
     while (accounts != NULL) {
         cout << accounts->data.accountID << ". Nr konta: " << accounts->data.accountNumber;
         cout << " Fundusze: " << accounts->data.amountOfMoney;
@@ -180,7 +186,7 @@ void savePersonsToFile(pointer persons) {
     fclose(file);
 }
 
-void readPersonsFromFile(pointer *persons) {
+void readPersonsFromFile(pointer* persons) {
     FILE* file;
     int size = sizeof(PersonData);
     PersonData data;
@@ -222,7 +228,7 @@ int main()
     setlocale(LC_CTYPE, "Polish");
     pointer persons = NULL;
     pointerA accounts = NULL;
-    int option = 0, enter, personID;
+    int option = 0, breakKey, personID;
     bool check;
 
     readPersonsFromFile(&persons);
@@ -251,6 +257,10 @@ int main()
                 showAccounts(accounts, persons);
                 break;
             case 4:
+                if (persons == NULL) {
+                    cout << "Nie mo¿na dodaæ konta poniewa¿ w bazie nie ma jeszcze u¿ytkowników.";
+                    break;
+                }
                 showPersons(persons);
                 cout << "\nWybierz po ID u¿ytnownika któremu chcesz utworzyæ konto: ";
                 cin >> personID;
@@ -275,7 +285,7 @@ int main()
             break;
         cout << "\nAby przejœæ dalej naciœnij ENTER";
         while (true) {
-            enter = getchar();
+            breakKey = getchar();
             if (cin.peek() == '\n')
                 break;
         }
