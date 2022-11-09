@@ -7,14 +7,17 @@
 
 using namespace std;
 
+// zmienne globalne przechowuj¹ce id u¿ytkowników i kont
 int personID = 1, accountID = 1;
 
+// struktura u¿ywana do przechowywania daty 
 struct Date {
     int day;
     int month;
     int year;
 };
 
+// struktura u¿ywana do przechowywania u¿ytkowników
 struct PersonData {
     int personID;
     char firstName[30];
@@ -23,6 +26,7 @@ struct PersonData {
     Date date;
 };
 
+// struktura u¿ywana do przechowywania kont u¿ytkowników
 struct AccountData {
     int accountID;
     int personID;
@@ -31,32 +35,80 @@ struct AccountData {
     Date openedDate;
 };
 
-struct Account {
-    AccountData data;
-    Account* next;
-};
-
+// struktura kolejki dla u¿ytkowników
 struct Person {
     PersonData data;
     Person* next;
 };
 
+// struktura kolejki dla kont
+struct Account {
+    AccountData data;
+    Account* next;
+};
+
+// stworzenie typów wskaŸnikowych dla kolejek
 typedef Person* pointer;
 typedef Account* pointerA;
 
+// funkcja sprawdzaj¹ca poprawnoœæ daty podanej przez u¿ytkownika
 bool checkDate(int day, int month, int year) {
     SYSTEMTIME st;
     GetSystemTime(&st);
-    if (day <= 0 || day > 31)
+
+    if (year < 1900 || year > st.wYear - 16) {
+        cout << "Zosta³ wprowadzony niepoprawny rok. U¿ytkownik musi mieæ conajmniej 16 lat." << endl;
         return false;
-    else if (month <= 0 || month > 12)
+    }
+    else if (month <= 0 || month > 12) {
+        cout << "Zosta³ wprowadzony niepoprawny miesi¹c." << endl;
         return false;
-    else if (year < 1900 || year > st.wYear - 16)
-        return false;
-    else
-        return true;
+    }
+
+    switch (month) {
+        case 1:
+        case 3:
+        case 5:
+        case 7:
+        case 8:
+        case 10:
+        case 12:
+            if (day <= 0 || day > 31) {
+                cout << "Zosta³ podany niepoprawny dzieñ" << endl;
+                return false;
+            }
+            break;
+        case 4:
+        case 6:
+        case 9:
+        case 11:
+            if (day <= 0 || day > 30) {
+                cout << "Zosta³ podany niepoprawny dzieñ" << endl;
+                return false;
+            }
+            break;
+        case 2:
+            if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0) {
+                if (day <= 0 || day > 29) {
+                    cout << "Zosta³ podany niepoprawny dzieñ" << endl;
+                    return false;
+                }
+            }
+            else {
+                if (day <= 0 || day > 28) {
+                    cout << "Zosta³ podany niepoprawny dzieñ" << endl;
+                    return false;
+                }
+            }
+            break;
+        default:
+            break;
+    }
+
+    return true;
 }
 
+// funkcja sprawdzaj¹ca czy u¿ytkownik o podanym ID istnieje
 bool checkPersonID(int id, pointer persons) {
     while (persons != NULL) {
         if (id == persons->data.personID) {
@@ -67,6 +119,7 @@ bool checkPersonID(int id, pointer persons) {
     return false;
 }
 
+// funkcja sprawdzaj¹ca czy konto o podanym numerze istanieje
 bool checkAccountNumber(int accountNumber, pointerA accounts) {
     while (accounts != NULL) {
         if (accounts->data.accountNumber == accountNumber) {
@@ -77,6 +130,7 @@ bool checkAccountNumber(int accountNumber, pointerA accounts) {
     return false;
 }
 
+// funkcja sprawdzaj¹ca kto jest w³aœcicielem danego konta
 string checkOwner(pointerA accounts, pointer persons) {
     if (persons == NULL) return "";
     while (persons->data.personID != accounts->data.personID) {
@@ -85,6 +139,7 @@ string checkOwner(pointerA accounts, pointer persons) {
     return persons->data.pesel;
 }
 
+// funkcja u¿ywana do dodawania danych u¿ytkownika przy tworzeniu nowego u¿ytkownika 
 PersonData personData() {
     PersonData data;
     cout << "Podaj imiê: ";
@@ -102,6 +157,7 @@ PersonData personData() {
     return data;
 }
 
+// funkcja u¿ywana do dodawania danych konta przy tworzeniu noweg konta
 AccountData accountData(pointerA accounts) {
     AccountData data;
     bool check = true;
@@ -125,6 +181,7 @@ AccountData accountData(pointerA accounts) {
     return data;
 }
 
+// funckja dodaj¹ca uzytkownika do kolejki
 void addPerson(pointer* persons, PersonData data) {
     if ((*persons) == NULL){
         pointer newPerson;
@@ -139,6 +196,7 @@ void addPerson(pointer* persons, PersonData data) {
         addPerson(&(*persons)->next, data);
 }
 
+// funkcja dodaj¹ca konta do kolejki
 void addAccount(pointerA* accounts, AccountData data, int ID) {
     if ((*accounts) == NULL) {
         pointerA newAccount;
@@ -154,6 +212,7 @@ void addAccount(pointerA* accounts, AccountData data, int ID) {
         addAccount(&(*accounts)->next, data, ID);
 }
 
+// funkcja wyœwietlaj¹ca u¿ytkowników z kolejki
 void showPersons(pointer persons) {
     if (persons == NULL) {
         cout << "Aktualnie w bazie nie ma u¿ytkowników.";
@@ -171,6 +230,7 @@ void showPersons(pointer persons) {
     }
 }
 
+// funkcja wyœwietlaj¹ca konta z kolejki
 void showAccounts(pointerA accounts, pointer persons) {
     if (accounts == NULL) {
         cout << "Aktualnie w bazie nie ma kont.";
@@ -183,6 +243,7 @@ void showAccounts(pointerA accounts, pointer persons) {
     }
 }
 
+// funkcja zapisuj¹ca u¿ytkowników do pliku
 void savePersonsToFile(pointer persons) {
     FILE *file;
     int size = sizeof(PersonData);
@@ -196,6 +257,7 @@ void savePersonsToFile(pointer persons) {
     fclose(file);
 }
 
+// funkcja odczytuj¹ca u¿ytkowników z pliku
 void readPersonsFromFile(pointer* persons) {
     FILE* file;
     int size = sizeof(PersonData);
@@ -208,6 +270,7 @@ void readPersonsFromFile(pointer* persons) {
     fclose(file);
 }
 
+// funkcja zapisujaca konta do pliku
 void saveAccountsToFile(pointerA accounts) {
     FILE* file;
     int size = sizeof(AccountData);
@@ -221,6 +284,7 @@ void saveAccountsToFile(pointerA accounts) {
     fclose(file);
 }
 
+// funkcja odczytuj¹ca konta z pliku
 void readAccountsFromFile(pointerA* accounts) {
     FILE* file;
     int size = sizeof(AccountData);
@@ -233,6 +297,7 @@ void readAccountsFromFile(pointerA* accounts) {
     fclose(file);
 }
 
+// funkcja pozwalaj¹ca wp³adaæ lub wyp³acaæ pieni¹dze z konta 
 void depositWithdrawMoney(pointerA accounts, int money, int accountNumber, int type) {
     while (accounts->data.accountNumber != accountNumber) {
         accounts = accounts->next;
@@ -252,14 +317,25 @@ void depositWithdrawMoney(pointerA accounts, int money, int accountNumber, int t
 
 int main()
 {
+    // ustawienie polskich znaków
     setlocale(LC_CTYPE, "Polish");
+    // przypisanie 
     pointer persons = NULL;
     pointerA accounts = NULL;
     int option = 0, breakKey, personID, depositOrWithdraw, accountNumber, amountOfMoney;
     bool check;
+    // option - przechwuje opcje wybrane przez u¿ytkownika w menu
+    // breakKey - u¿ywane do anulowania dzia³ania czynnoœci lub potwierdzenia klikaj¹c ENTER
+    // personID - przechwuje ID osoby podane przez u¿ytkownika
+    // depositOrWithdraw - zmienna przechwuj¹ca wartoœci 1 lub 2, sprawdza czy u¿ytkownik chce wp³aciæ czy wyp³aciæ pieni¹dze
+    // accountNumber - zmienna przechowuj¹ca podany przez u¿ytkownika numer konta
+    // amountOfMoney - zmienna przechowuj¹ca iloœc piêniêdzy 
 
+    // pobieranie danych z plików je¿eli takie istniej¹
     readPersonsFromFile(&persons);
     readAccountsFromFile(&accounts);
+
+    // interfejs dla u¿utkownika - menu
     while (option != 10) {
         cout << "SYSTEM ZARZ¥DZANIA BANKIEM" << endl;
         cout << "\n1.Dodaj u¿ytkownika";
@@ -316,16 +392,17 @@ int main()
                 cin >> accountNumber;
                 check = checkAccountNumber(accountNumber, accounts);
                 while (!check) {
-                    cout << "Nie ma konta o wprowadzony numerze. Podaj numer konta jeszcze raz: ";
+                    cout << "Nie ma konta o wprowadzony numerze, chcesz przerwaæ ? (T - przerwaæ, N - kontynuuj)" << endl;
+                    do {
+                        breakKey = getchar();
+                    } while (breakKey != 84 && breakKey != 116 && breakKey != 78 && breakKey != 110);
+                    if (breakKey == 84 || breakKey == 116) break;
+                    cout << "Podaj numer konta jeszcze raz: ";
                     cin >> accountNumber;
                     check = checkAccountNumber(accountNumber, accounts);
                 }
-                if (depositOrWithdraw == 1) {
-                    cout << "Podaj iloœæ pieniêdzy do wp³aty: ";
-                }
-                else if (depositOrWithdraw == 2) {
-                    cout << "Podaj iloœæ pieniêdzy do wyp³aty: ";
-                }
+                if (breakKey == 84 || breakKey == 116) break;
+                depositOrWithdraw == 1 ? cout << "Podaj iloœæ pieniêdzy do wp³aty: " : cout << "Podaj iloœæ pieniêdzy do wyp³aty: ";
                 cin >> amountOfMoney;
                 depositWithdrawMoney(accounts, amountOfMoney, accountNumber, depositOrWithdraw);
                 break;
@@ -337,6 +414,7 @@ int main()
                 break;
         }
 
+        // aby konsola nie czyœci³a siê po wykonaniu operacji i u¿ytkownik móg³ zobaczyæ zmiany program czeka na wciœniêcie ENTER
         if (option == 10) 
             break;
         cout << "\nAby przejœæ dalej naciœnij ENTER";
@@ -345,9 +423,12 @@ int main()
             if (cin.peek() == '\n')
                 break;
         }
+
+        // czyszczenie okna konsoli 
         system("cls");
     }
     
+    // zapisywanie danych do plików
     savePersonsToFile(persons);
     saveAccountsToFile(accounts);
 
