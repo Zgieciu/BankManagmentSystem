@@ -7,8 +7,8 @@
 
 using namespace std;
 
-// zmienne globalne przechowuj¹ce id u¿ytkowników i kont
-int personID = 1, accountID = 1;
+// zmienne globalne przechowuj¹ce id u¿ytkowników, kont i po¿yczek
+int personID = 1, accountID = 1, loanID = 1;
 
 // struktura u¿ywana do przechowywania daty 
 struct Date {
@@ -35,6 +35,15 @@ struct AccountData {
     Date openedDate;
 };
 
+// struktura u¿ywana do przechowywania informacji o po¿yczkach
+struct LoanData {
+    int loanID;
+    int personID;
+    int LoanNumber;
+    float amountOfLoan;
+    float amountToRepaid;
+};
+
 // struktura kolejki dla u¿ytkowników
 struct Person {
     PersonData data;
@@ -47,9 +56,16 @@ struct Account {
     Account* next;
 };
 
+// struktura kolejki dla po¿yczek
+struct Loan {
+    LoanData data;
+    Loan* next;
+};
+
 // stworzenie typów wskaŸnikowych dla kolejek
 typedef Person* pointer;
 typedef Account* pointerA;
+typedef Loan* pointerL;
 
 // funkcja sprawdzaj¹ca poprawnoœæ daty podanej przez u¿ytkownika
 bool checkDate(int day, int month, int year) {
@@ -181,6 +197,13 @@ AccountData accountData(pointerA accounts) {
     return data;
 }
 
+// funkcja u¿ywana do dodawania danych po¿yczki przy tworzeniu nowej po¿yczki
+//LoanData loanData(pointerA accounts) {
+//    LoanData data;
+//   
+//    return data;
+//}
+
 // funckja dodaj¹ca uzytkownika do kolejki
 void addPerson(pointer* persons, PersonData data) {
     if ((*persons) == NULL){
@@ -210,6 +233,11 @@ void addAccount(pointerA* accounts, AccountData data, int ID) {
     }
     else
         addAccount(&(*accounts)->next, data, ID);
+}
+
+// funkcja dodaj¹ca po¿yczki do kolejki
+void addLoan(pointerL* loans, LoanData data) {
+
 }
 
 // funkcja wyœwietlaj¹ca u¿ytkowników z kolejki
@@ -319,9 +347,10 @@ int main()
 {
     // ustawienie polskich znaków
     setlocale(LC_CTYPE, "Polish");
-    // przypisanie 
+    // przypisanie do pierwszych elementów kolejki NULL
     pointer persons = NULL;
     pointerA accounts = NULL;
+    pointerL loans = NULL;
     int option = 0, breakKey, personID, depositOrWithdraw, accountNumber, amountOfMoney;
     bool check;
     // option - przechwuje opcje wybrane przez u¿ytkownika w menu
@@ -343,6 +372,8 @@ int main()
         cout << "\n3.Wyœwietl konta";
         cout << "\n4.Utwórz konto";
         cout << "\n5.Wp³aæ / Wyp³aæ pieni¹dze";
+        cout << "\n6.Udziel po¿yczki";
+        cout << "\n7.Sp³aæ po¿yczkê";
         cout << "\n10.Zakoñcz program\n" << endl;
 
         cout << "Wybierz opcje: ";
@@ -405,6 +436,13 @@ int main()
                 depositOrWithdraw == 1 ? cout << "Podaj iloœæ pieniêdzy do wp³aty: " : cout << "Podaj iloœæ pieniêdzy do wyp³aty: ";
                 cin >> amountOfMoney;
                 depositWithdrawMoney(accounts, amountOfMoney, accountNumber, depositOrWithdraw);
+                break;
+            case 6:
+
+                break;
+
+            case 7:
+
                 break;
             case 10:
                 cout << "Dziêkujemy za u¿ycie programu. Wszystkie dane zostan¹ zapisane do bazy danych.";
