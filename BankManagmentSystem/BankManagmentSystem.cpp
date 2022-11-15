@@ -323,7 +323,9 @@ void showLoans(pointerL loans, pointer persons) {
     while (loans != NULL) {
         cout << loans->data.loanID << ". Nr po¿yczki: " << loans->data.loanNumber;
         cout << " Wysokoœæ po¿yczki: " << loans->data.amountOfLoan << " Do sp³aty: " << loans->data.amountToRepaid;
-        cout << " W³aœciciel: " << checkLoanOwner(loans, persons) << endl;
+        cout << " W³aœciciel: " << checkLoanOwner(loans, persons);
+        loans->data.amountToRepaid > 0 ?  cout << "" : cout << " (SP£ACONA)";
+        cout << endl;
         loans = loans->next;
     }
 }
@@ -382,6 +384,33 @@ void readAccountsFromFile(pointerA* accounts) {
     fclose(file);
 }
 
+// funkcja zapisujaca po¿yczki do pliku
+void saveLoansToFile(pointerL loans) {
+    FILE* file;
+    int size = sizeof(LoanData);
+    file = fopen("loans.dat", "wb");
+    if (file == NULL)
+        return;
+    while (loans != NULL) {
+        fwrite(&loans->data, size, 1, file);
+        loans = loans->next;
+    }
+    fclose(file);
+}
+
+// funkcja odczutuj¹ca po¿yczki z pliku
+void readLoansFromFile(pointerL* loans) {
+    FILE* file;
+    int size = sizeof(LoanData);
+    LoanData data;
+    file = fopen("loans.dat", "rb");
+    if (file == NULL)
+        return;
+    while (fread(&data, size, 1, file) == 1)
+        addLoan(&(*loans), data, data.personID);
+    fclose(file);
+}
+
 // funkcja pozwalaj¹ca wp³adaæ lub wyp³acaæ pieni¹dze z konta 
 void depositWithdrawMoney(pointerA accounts, int money, int accountNumber, int type) {
     while (accounts->data.accountNumber != accountNumber) {
@@ -400,6 +429,23 @@ void depositWithdrawMoney(pointerA accounts, int money, int accountNumber, int t
     cout << "Stan konta po wykonaniu transakcji: " << accounts->data.amountOfMoney;
 }
 
+// funkcja u¿ywana do sp³acania po¿yczki
+void payBackLoan(pointerL loans, int money, int loanNumber) {
+    while (loans->data.loanNumber != loanNumber) {
+        loans = loans->next;
+    }
+    while (money > loans->data.amountToRepaid) {
+        cout << "Chcesz sp³aciæ wiêksz¹ kwotê ni¿ zosta³a do sp³acenia, podaj kwotê jeszcze raz (do sp³acenia: " << loans->data.amountToRepaid << "z³):";
+        cin >> money;
+    }
+    loans->data.amountToRepaid -= money;
+    if (loans->data.amountToRepaid == 0) {
+        cout << "Po¿yczka zosta³a sp³acona w ca³oœci.";
+        return;
+    }
+    cout << "Do sp³aty zosta³o: " << loans->data.amountToRepaid << "z³, po¿yczka by³a wziêta na: " << loans->data.amountOfLoan << "z³";
+}
+
 int main()
 {
     // ustawienie polskich znaków
@@ -408,7 +454,8 @@ int main()
     pointer persons = NULL;
     pointerA accounts = NULL;
     pointerL loans = NULL;
-    int option = 0, breakKey, personID, depositOrWithdraw, accountNumber, amountOfMoney, loanNumber;
+    int option = 0, breakKey, personID, depositOrWithdraw, accountNumber, loanNumber;
+    float amountOfMoney;
     bool check; // zmienna u¿ywana do sprawdzania warunków
     // option - przechwuje opcje wybrane przez u¿ytkownika w menu
     // breakKey - u¿ywane do anulowania dzia³ania czynnoœci lub potwierdzenia klikaj¹c ENTER
@@ -421,6 +468,7 @@ int main()
     // pobieranie danych z plików je¿eli takie istniej¹
     readPersonsFromFile(&persons);
     readAccountsFromFile(&accounts);
+    readLoansFromFile(&loans);
 
     // interfejs dla u¿utkownika - menu
     while (option != 10) {
@@ -533,6 +581,9 @@ int main()
                     cin >> loanNumber;
                     check = checkLoanNumber(loanNumber, loans);
                 }
+                cout << "Podaj iloœæ pieniêdzy do sp³aty: ";
+                cin >> amountOfMoney;
+                payBackLoan(loans, amountOfMoney, loanNumber);
                 break;
             case 10: // zakoñczenie dzia³ania programu
                 cout << "Dziêkujemy za u¿ycie programu. Wszystkie dane zostan¹ zapisane do bazy danych.";
@@ -559,6 +610,7 @@ int main()
     // zapisywanie danych do plików
     savePersonsToFile(persons);
     saveAccountsToFile(accounts);
+    saveLoansToFile(loans);
 
     return 0;
 }
