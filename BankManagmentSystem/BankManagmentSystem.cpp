@@ -39,7 +39,7 @@ struct AccountData {
 struct LoanData {
     int loanID;
     int personID;
-    int LoanNumber;
+    int loanNumber;
     float amountOfLoan;
     float amountToRepaid;
 };
@@ -146,10 +146,30 @@ bool checkAccountNumber(int accountNumber, pointerA accounts) {
     return false;
 }
 
+//funkcja sprawdzaj¹ca czy po¿yczka o podanym numerze istnieje
+bool checkLoanNumber(int loanNumber, pointerL loans) {
+    while (loans != NULL) {
+        if (loans->data.loanNumber == loanNumber) {
+            return true;
+        }
+        loans = loans->next;
+    }
+    return false;
+}
+
 // funkcja sprawdzaj¹ca kto jest w³aœcicielem danego konta
-string checkOwner(pointerA accounts, pointer persons) {
+string checkAccountOwner(pointerA accounts, pointer persons) {
     if (persons == NULL) return "";
     while (persons->data.personID != accounts->data.personID) {
+        persons = persons->next;
+    }
+    return persons->data.pesel;
+}
+
+// funkcja sprawdzaj¹ca na kogo jest wziêta po¿yczka
+string checkLoanOwner(pointerL loans, pointer persons) {
+    if (persons == NULL) return "";
+    while (persons->data.personID != loans->data.personID) {
         persons = persons->next;
     }
     return persons->data.pesel;
@@ -198,11 +218,24 @@ AccountData accountData(pointerA accounts) {
 }
 
 // funkcja u¿ywana do dodawania danych po¿yczki przy tworzeniu nowej po¿yczki
-//LoanData loanData(pointerA accounts) {
-//    LoanData data;
-//   
-//    return data;
-//}
+LoanData loanData(pointerL loans) {
+    LoanData data;
+    bool check = true;
+    int random;
+    cout << "Podaj wysokoœæ po¿yczki: ";
+    cin >> data.amountOfLoan;
+    data.amountToRepaid = data.amountOfLoan;
+    while (check) {
+        random = rand() % 8999 + 1000;
+        data.loanNumber = random;
+        check = false;
+        while (loans != NULL) {
+            if (loans->data.loanNumber == data.loanNumber) check = true;
+            loans = loans->next;
+        }
+    }
+    return data;
+}
 
 // funckja dodaj¹ca uzytkownika do kolejki
 void addPerson(pointer* persons, PersonData data) {
@@ -236,8 +269,19 @@ void addAccount(pointerA* accounts, AccountData data, int ID) {
 }
 
 // funkcja dodaj¹ca po¿yczki do kolejki
-void addLoan(pointerL* loans, LoanData data) {
-
+void addLoan(pointerL* loans, LoanData data, int ID) {
+    if ((*loans) == NULL) {
+        pointerL newLoan;
+        newLoan = (Loan*)malloc(sizeof(Loan));
+        newLoan->data = data;
+        newLoan->data.loanID = loanID;
+        newLoan->data.personID = ID;
+        newLoan->next = NULL;
+        (*loans) = newLoan;
+        loanID++;
+    }
+    else
+        addLoan(&(*loans)->next, data, ID);
 }
 
 // funkcja wyœwietlaj¹ca u¿ytkowników z kolejki
@@ -266,8 +310,21 @@ void showAccounts(pointerA accounts, pointer persons) {
     while (accounts != NULL) {
         cout << accounts->data.accountID << ". Nr konta: " << accounts->data.accountNumber;
         cout << " Fundusze: " << accounts->data.amountOfMoney;
-        cout << "  W³aœciciel:" << checkOwner(accounts, persons) << endl;
+        cout << "  W³aœciciel: " << checkAccountOwner(accounts, persons) << endl;
         accounts = accounts->next;
+    }
+}
+
+// funkcja wyœwietlaj¹ca po¿yczki z kolejki
+void showLoans(pointerL loans, pointer persons) {
+    if (loans == NULL) {
+        cout << "Aktualnie w bazie nie ma po¿yczek.";
+    }
+    while (loans != NULL) {
+        cout << loans->data.loanID << ". Nr po¿yczki: " << loans->data.loanNumber;
+        cout << " Wysokoœæ po¿yczki: " << loans->data.amountOfLoan << " Do sp³aty: " << loans->data.amountToRepaid;
+        cout << " W³aœciciel: " << checkLoanOwner(loans, persons) << endl;
+        loans = loans->next;
     }
 }
 
@@ -351,14 +408,15 @@ int main()
     pointer persons = NULL;
     pointerA accounts = NULL;
     pointerL loans = NULL;
-    int option = 0, breakKey, personID, depositOrWithdraw, accountNumber, amountOfMoney;
-    bool check;
+    int option = 0, breakKey, personID, depositOrWithdraw, accountNumber, amountOfMoney, loanNumber;
+    bool check; // zmienna u¿ywana do sprawdzania warunków
     // option - przechwuje opcje wybrane przez u¿ytkownika w menu
     // breakKey - u¿ywane do anulowania dzia³ania czynnoœci lub potwierdzenia klikaj¹c ENTER
     // personID - przechwuje ID osoby podane przez u¿ytkownika
     // depositOrWithdraw - zmienna przechwuj¹ca wartoœci 1 lub 2, sprawdza czy u¿ytkownik chce wp³aciæ czy wyp³aciæ pieni¹dze
     // accountNumber - zmienna przechowuj¹ca podany przez u¿ytkownika numer konta
     // amountOfMoney - zmienna przechowuj¹ca iloœc piêniêdzy 
+    // loanNumber - zmienna przechowuj¹ca podany przez u¿ytkownika numer po¿yczki
 
     // pobieranie danych z plików je¿eli takie istniej¹
     readPersonsFromFile(&persons);
@@ -370,10 +428,11 @@ int main()
         cout << "\n1.Dodaj u¿ytkownika";
         cout << "\n2.Wyœwietl u¿ytkowników";
         cout << "\n3.Wyœwietl konta";
-        cout << "\n4.Utwórz konto";
-        cout << "\n5.Wp³aæ / Wyp³aæ pieni¹dze";
-        cout << "\n6.Udziel po¿yczki";
-        cout << "\n7.Sp³aæ po¿yczkê";
+        cout << "\n4.Wyœwietl po¿yczki";
+        cout << "\n5.Utwórz konto";
+        cout << "\n6.Wp³aæ / Wyp³aæ pieni¹dze";
+        cout << "\n7.Udziel po¿yczki";
+        cout << "\n8.Sp³aæ po¿yczkê";
         cout << "\n10.Zakoñcz program\n" << endl;
 
         cout << "Wybierz opcje: ";
@@ -381,17 +440,20 @@ int main()
         cout << endl;
 
         switch (option) {
-            case 1:
+            case 1: // dodawanie u¿ytkowników
                 PersonData pData = personData();
                 addPerson(&persons, pData);
                 break;
-            case 2:
+            case 2: // wyœwietlanie u¿ytkowników
                 showPersons(persons);
                 break;
-            case 3:
+            case 3: // wyœwietlanie kont
                 showAccounts(accounts, persons);
                 break;
-            case 4:
+            case 4: // wyœwietl po¿yczki
+                showLoans(loans, persons);
+                break;
+            case 5: // tworzenie kont
                 if (persons == NULL) {
                     cout << "Nie mo¿na dodaæ konta poniewa¿ w bazie nie ma jeszcze u¿ytkowników.";
                     break;
@@ -408,7 +470,7 @@ int main()
                 AccountData aData = accountData(accounts);
                 addAccount(&accounts, aData, personID);
                 break;
-            case 5:
+            case 6: // wp³acanie / wyp³acanie pieniêdzy z kont
                 if (accounts == NULL) {
                     cout << "Aktualnie w bazie nie ma kont, dlatego funkcja wp³aty i wyp³aty pieniêdzy jest zablokowana.";
                     break;
@@ -419,11 +481,11 @@ int main()
                     cout << "Poda³eœ z³¹ opcjê, wybiersz jeszcze raz: ";
                     cin >> depositOrWithdraw;
                 }
-                cout << "WprowadŸ numer swojeg konta: ";
+                cout << "WprowadŸ numer konta: ";
                 cin >> accountNumber;
                 check = checkAccountNumber(accountNumber, accounts);
                 while (!check) {
-                    cout << "Nie ma konta o wprowadzony numerze, chcesz przerwaæ ? (T - przerwaæ, N - kontynuuj)" << endl;
+                    cout << "Nie ma konta o wprowadzonmy numerze, chcesz przerwaæ ? (T - przerwaæ, N - kontynuuj)" << endl;
                     do {
                         breakKey = getchar();
                     } while (breakKey != 84 && breakKey != 116 && breakKey != 78 && breakKey != 110);
@@ -437,14 +499,42 @@ int main()
                 cin >> amountOfMoney;
                 depositWithdrawMoney(accounts, amountOfMoney, accountNumber, depositOrWithdraw);
                 break;
-            case 6:
-
+            case 7: // udzielanie po¿yczek
+                if (persons == NULL) {
+                    cout << "Nie mo¿na dodaæ po¿yczki poniewa¿ w bazie nie ma jeszcze u¿ytkowników.";
+                }
+                showPersons(persons);
+                cout << "\nPodaj ID u¿ytkownika któremu chcesz udzieliæ po¿yczki: ";
+                cin >> personID;
+                check = checkPersonID(personID, persons);
+                while (!check) {
+                    cout << "Nie ma u¿yktownika o podanym ID. Podaj ID jeszcze raz: ";
+                    cin >> personID;
+                    check = checkPersonID(personID, persons);
+                }
+                LoanData lData = loanData(loans);
+                addLoan(&loans, lData, personID);
                 break;
-
-            case 7:
-
+            case 8: // sp³acanie po¿yczek
+                if (loans == NULL) {
+                    cout << "Akutalnie w bazie nie ma po¿yczek, dlatego funkcja wp³aty jest zablokowana.";
+                    break;
+                }
+                cout << "WprowadŸ numer po¿yczki: ";
+                cin >> loanNumber;
+                check = checkLoanNumber(loanNumber, loans);
+                while (!check) {
+                    cout << "Nie ma po¿yczki o wprowadzonym numerze, chcesz przerwaæ ? (T - przerwaæ, N - kontynuuj)" << endl;
+                    do {
+                        breakKey = getchar();
+                    } while (breakKey != 84 && breakKey != 116 && breakKey != 78 && breakKey != 110);
+                    if (breakKey == 84 || breakKey == 116) break;
+                    cout << "Podaj numer po¿yczki jeszcze raz: ";
+                    cin >> loanNumber;
+                    check = checkLoanNumber(loanNumber, loans);
+                }
                 break;
-            case 10:
+            case 10: // zakoñczenie dzia³ania programu
                 cout << "Dziêkujemy za u¿ycie programu. Wszystkie dane zostan¹ zapisane do bazy danych.";
                 break;
             default:
