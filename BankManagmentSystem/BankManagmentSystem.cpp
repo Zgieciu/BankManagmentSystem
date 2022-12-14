@@ -478,6 +478,7 @@ int main()
 
     int loginOption = 0;
     string login, password; // zmienne u¿ywane do logowania
+    string loggedPerson; // zmienna u¿ywana do ustalania uprawnieñ zalogowanego u¿ytkownika
 
     // pobieranie danych z plików je¿eli takie istniej¹
     readPersonsFromFile(&persons);
@@ -486,6 +487,7 @@ int main()
 
     // interfejs do logowania
     while (loginOption != 2) {
+        option = 0;
         cout << "SYSTEM ZARZ¥DZANIA BANKIEM" << endl;
         cout << "\n1.Zaloguj siê";
         cout << "\n2.Zakoñcz program\n" << endl;
@@ -494,22 +496,30 @@ int main()
         
         switch (loginOption) {
             case 1:
-                cout << "Podaj login: ";
-                cin >> login;
-                cout << "Podaj has³o: ";
-                cin >> password;
-                if (true) {
-                    cout << "Logowanie przebieg³o pomyœlnie." << endl;
-                    waitForEnter();
-                    system("cls");
-                    // interfejs dla u¿utkownika - menu
+                while (login != "admin" && login != "worker" && login != "user") {
+                    cout << "Podaj login: ";
+                    cin >> login;
+                    /*cout << "Podaj has³o: ";
+                    cin >> password;*/
+                    if (login == "admin") {
+                        loggedPerson = "admin";
+                    }
+                    else if (login == "user") {
+                        loggedPerson = "user";
+                    }
+                }
+                cout << "Logowanie przebieg³o pomyœlnie." << endl;
+                waitForEnter();
+                system("cls");
+                if (login == "admin") {
+                    // interfejs dla admin - menu
                     while (option != 10) {
                         cout << "SYSTEM ZARZ¥DZANIA BANKIEM" << endl;
                         cout << "\n1.Dodaj u¿ytkownika";
                         cout << "\n2.Wyœwietl u¿ytkowników";
                         cout << "\n3.Wyœwietl konta";
                         cout << "\n4.Wyœwietl po¿yczki";
-                        cout << "\n5.Utwórz konto";
+                        cout << "\n5.Utwórz konto bankowe";
                         cout << "\n6.Wp³aæ / Wyp³aæ pieni¹dze";
                         cout << "\n7.Udziel po¿yczki";
                         cout << "\n8.Sp³aæ po¿yczkê";
@@ -520,109 +530,190 @@ int main()
                         cout << endl;
 
                         switch (option) {
-                        case 1: // dodawanie u¿ytkowników
-                            PersonData pData = personData();
-                            addPerson(&persons, pData);
-                            break;
-                        case 2: // wyœwietlanie u¿ytkowników
-                            showPersons(persons);
-                            break;
-                        case 3: // wyœwietlanie kont
-                            showAccounts(accounts, persons);
-                            break;
-                        case 4: // wyœwietl po¿yczki
-                            showLoans(loans, persons);
-                            break;
-                        case 5: // tworzenie kont
-                            if (persons == NULL) {
-                                cout << "Nie mo¿na dodaæ konta poniewa¿ w bazie nie ma jeszcze u¿ytkowników.";
+                            case 1: // dodawanie u¿ytkowników
+                                PersonData pData = personData();
+                                addPerson(&persons, pData);
                                 break;
-                            }
-                            showPersons(persons);
-                            cout << "\nWybierz po ID u¿ytnownika któremu chcesz utworzyæ konto: ";
-                            cin >> personID;
-                            check = checkPersonID(personID, persons);
-                            while (!check) {
-                                cout << "Nie ma u¿yktownika o podanym ID. Podaj ID jeszcze raz: ";
+                            case 2: // wyœwietlanie u¿ytkowników
+                                showPersons(persons);
+                                break;
+                            case 3: // wyœwietlanie kont
+                                showAccounts(accounts, persons);
+                                break;
+                            case 4: // wyœwietl po¿yczki
+                                showLoans(loans, persons);
+                                break;
+                            case 5: // tworzenie kont
+                                if (persons == NULL) {
+                                    cout << "Nie mo¿na dodaæ konta poniewa¿ w bazie nie ma jeszcze u¿ytkowników.";
+                                    break;
+                                }
+                                showPersons(persons);
+                                cout << "\nWybierz po ID u¿ytnownika któremu chcesz utworzyæ konto: ";
                                 cin >> personID;
                                 check = checkPersonID(personID, persons);
-                            }
-                            AccountData aData = accountData(accounts);
-                            addAccount(&accounts, aData, personID);
-                            break;
-                        case 6: // wp³acanie / wyp³acanie pieniêdzy z kont
-                            if (accounts == NULL) {
-                                cout << "Aktualnie w bazie nie ma kont, dlatego funkcja wp³aty i wyp³aty pieniêdzy jest zablokowana.";
+                                while (!check) {
+                                    cout << "Nie ma u¿yktownika o podanym ID. Podaj ID jeszcze raz: ";
+                                    cin >> personID;
+                                    check = checkPersonID(personID, persons);
+                                }
+                                AccountData aData = accountData(accounts);
+                                addAccount(&accounts, aData, personID);
                                 break;
-                            }
-                            cout << "Chcesz wyp³aciæ czy wp³aciæ pieni¹dze ? (wp³ata - 1, wyp³ata - 2): ";
-                            cin >> depositOrWithdraw;
-                            while (depositOrWithdraw != 1 && depositOrWithdraw != 2) {
-                                cout << "Poda³eœ z³¹ opcjê, wybiersz jeszcze raz: ";
+                            case 6: // wp³acanie / wyp³acanie pieniêdzy z kont
+                                if (accounts == NULL) {
+                                    cout << "Aktualnie w bazie nie ma kont, dlatego funkcja wp³aty i wyp³aty pieniêdzy jest zablokowana.";
+                                    break;
+                                }
+                                cout << "Chcesz wyp³aciæ czy wp³aciæ pieni¹dze ? (wp³ata - 1, wyp³ata - 2): ";
                                 cin >> depositOrWithdraw;
-                            }
-                            cout << "WprowadŸ numer konta: ";
-                            cin >> accountNumber;
-                            check = checkAccountNumber(accountNumber, accounts);
-                            while (!check) {
-                                cout << "Nie ma konta o wprowadzonmy numerze, chcesz przerwaæ ? (T - przerwaæ, N - kontynuuj)" << endl;
-                                do {
-                                    breakKey = getchar();
-                                } while (breakKey != 84 && breakKey != 116 && breakKey != 78 && breakKey != 110);
-                                if (breakKey == 84 || breakKey == 116) break;
-                                cout << "Podaj numer konta jeszcze raz: ";
+                                while (depositOrWithdraw != 1 && depositOrWithdraw != 2) {
+                                    cout << "Poda³eœ z³¹ opcjê, wybiersz jeszcze raz: ";
+                                    cin >> depositOrWithdraw;
+                                }
+                                cout << "WprowadŸ numer konta: ";
                                 cin >> accountNumber;
                                 check = checkAccountNumber(accountNumber, accounts);
-                            }
-                            if (breakKey == 84 || breakKey == 116) break;
-                            depositOrWithdraw == 1 ? cout << "Podaj iloœæ pieniêdzy do wp³aty: " : cout << "Podaj iloœæ pieniêdzy do wyp³aty: ";
-                            cin >> amountOfMoney;
-                            depositWithdrawMoney(accounts, amountOfMoney, accountNumber, depositOrWithdraw);
-                            break;
-                        case 7: // udzielanie po¿yczek
-                            if (persons == NULL) {
-                                cout << "Nie mo¿na dodaæ po¿yczki poniewa¿ w bazie nie ma jeszcze u¿ytkowników.";
-                            }
-                            showPersons(persons);
-                            cout << "\nPodaj ID u¿ytkownika któremu chcesz udzieliæ po¿yczki: ";
-                            cin >> personID;
-                            check = checkPersonID(personID, persons);
-                            while (!check) {
-                                cout << "Nie ma u¿yktownika o podanym ID. Podaj ID jeszcze raz: ";
+                                while (!check) {
+                                    cout << "Nie ma konta o wprowadzonmy numerze, chcesz przerwaæ ? (T - przerwaæ, N - kontynuuj)" << endl;
+                                    do {
+                                        breakKey = getchar();
+                                    } while (breakKey != 84 && breakKey != 116 && breakKey != 78 && breakKey != 110);
+                                    if (breakKey == 84 || breakKey == 116) break;
+                                    cout << "Podaj numer konta jeszcze raz: ";
+                                    cin >> accountNumber;
+                                    check = checkAccountNumber(accountNumber, accounts);
+                                }
+                                if (breakKey == 84 || breakKey == 116) break;
+                                depositOrWithdraw == 1 ? cout << "Podaj iloœæ pieniêdzy do wp³aty: " : cout << "Podaj iloœæ pieniêdzy do wyp³aty: ";
+                                cin >> amountOfMoney;
+                                depositWithdrawMoney(accounts, amountOfMoney, accountNumber, depositOrWithdraw);
+                                break;
+                            case 7: // udzielanie po¿yczek
+                                if (persons == NULL) {
+                                    cout << "Nie mo¿na dodaæ po¿yczki poniewa¿ w bazie nie ma jeszcze u¿ytkowników.";
+                                }
+                                showPersons(persons);
+                                cout << "\nPodaj ID u¿ytkownika któremu chcesz udzieliæ po¿yczki: ";
                                 cin >> personID;
                                 check = checkPersonID(personID, persons);
-                            }
-                            LoanData lData = loanData(loans);
-                            addLoan(&loans, lData, personID);
-                            break;
-                        case 8: // sp³acanie po¿yczek
-                            if (loans == NULL) {
-                                cout << "Akutalnie w bazie nie ma po¿yczek, dlatego funkcja wp³aty jest zablokowana.";
+                                while (!check) {
+                                    cout << "Nie ma u¿yktownika o podanym ID. Podaj ID jeszcze raz: ";
+                                    cin >> personID;
+                                    check = checkPersonID(personID, persons);
+                                }
+                                LoanData lData = loanData(loans);
+                                addLoan(&loans, lData, personID);
                                 break;
-                            }
-                            cout << "WprowadŸ numer po¿yczki: ";
-                            cin >> loanNumber;
-                            check = checkLoanNumber(loanNumber, loans);
-                            while (!check) {
-                                cout << "Nie ma po¿yczki o wprowadzonym numerze, chcesz przerwaæ ? (T - przerwaæ, N - kontynuuj)" << endl;
-                                do {
-                                    breakKey = getchar();
-                                } while (breakKey != 84 && breakKey != 116 && breakKey != 78 && breakKey != 110);
-                                if (breakKey == 84 || breakKey == 116) break;
-                                cout << "Podaj numer po¿yczki jeszcze raz: ";
+                            case 8: // sp³acanie po¿yczek
+                                if (loans == NULL) {
+                                    cout << "Akutalnie w bazie nie ma po¿yczek, dlatego funkcja wp³aty jest zablokowana.";
+                                    break;
+                                }
+                                cout << "WprowadŸ numer po¿yczki: ";
                                 cin >> loanNumber;
                                 check = checkLoanNumber(loanNumber, loans);
-                            }
-                            cout << "Podaj iloœæ pieniêdzy do sp³aty: ";
-                            cin >> amountOfMoney;
-                            payBackLoan(loans, amountOfMoney, loanNumber);
-                            break;
-                        case 10: // wylogowanie u¿ytkownika
-                            cout << "Nast¹pi³o wylogowanie.";
-                            break;
-                        default:
-                            cout << "Nie ma opcji o takim numerze";
-                            break;
+                                while (!check) {
+                                    cout << "Nie ma po¿yczki o wprowadzonym numerze, chcesz przerwaæ ? (T - przerwaæ, N - kontynuuj)" << endl;
+                                    do {
+                                        breakKey = getchar();
+                                    } while (breakKey != 84 && breakKey != 116 && breakKey != 78 && breakKey != 110);
+                                    if (breakKey == 84 || breakKey == 116) break;
+                                    cout << "Podaj numer po¿yczki jeszcze raz: ";
+                                    cin >> loanNumber;
+                                    check = checkLoanNumber(loanNumber, loans);
+                                }
+                                cout << "Podaj iloœæ pieniêdzy do sp³aty: ";
+                                cin >> amountOfMoney;
+                                payBackLoan(loans, amountOfMoney, loanNumber);
+                                break;
+                            case 10: // wylogowanie u¿ytkownika
+                                login = "";
+                                loggedPerson = "";
+                                cout << "Nast¹pi³o wylogowanie.";
+                                break;
+                            default:
+                                cout << "Nie ma opcji o takim numerze";
+                                break;
+                        }
+                        // program czeka na ENTER aby u¿ytkownik móg³ zobaczyæ wynik na konsoli przed jej wyczyszczeniem
+                        waitForEnter();
+                        system("cls");
+                    }
+                }
+                else if (login == "user") {
+                    // interfejs dla u¿ytkownika - menu
+                    while (option != 3) {
+                        cout << "SYSTEM ZARZ¥DZANIA BANKIEM" << endl;
+                        cout << "\n1.Wp³aæ / Wyp³aæ pieni¹dze";
+                        cout << "\n2.Sp³aæ po¿yczkê";
+                        cout << "\n3.Wyloguj siê\n" << endl;
+
+                        cout << "Wybierz opcje: ";
+                        cin >> option;
+                        cout << endl;
+
+                        switch (option) {
+                            case 1: // wp³acanie / wyp³acanie pieniêdzy z kont
+                                if (accounts == NULL) {
+                                    cout << "Aktualnie w bazie nie ma kont, dlatego funkcja wp³aty i wyp³aty pieniêdzy jest zablokowana.";
+                                    break;
+                                }
+                                cout << "Chcesz wyp³aciæ czy wp³aciæ pieni¹dze ? (wp³ata - 1, wyp³ata - 2): ";
+                                cin >> depositOrWithdraw;
+                                while (depositOrWithdraw != 1 && depositOrWithdraw != 2) {
+                                    cout << "Poda³eœ z³¹ opcjê, wybiersz jeszcze raz: ";
+                                    cin >> depositOrWithdraw;
+                                }
+                                cout << "WprowadŸ numer konta: ";
+                                cin >> accountNumber;
+                                check = checkAccountNumber(accountNumber, accounts);
+                                while (!check) {
+                                    cout << "Nie ma konta o wprowadzonmy numerze, chcesz przerwaæ ? (T - przerwaæ, N - kontynuuj)" << endl;
+                                    do {
+                                        breakKey = getchar();
+                                    } while (breakKey != 84 && breakKey != 116 && breakKey != 78 && breakKey != 110);
+                                    if (breakKey == 84 || breakKey == 116) break;
+                                    cout << "Podaj numer konta jeszcze raz: ";
+                                    cin >> accountNumber;
+                                    check = checkAccountNumber(accountNumber, accounts);
+                                }
+                                if (breakKey == 84 || breakKey == 116) break;
+                                depositOrWithdraw == 1 ? cout << "Podaj iloœæ pieniêdzy do wp³aty: " : cout << "Podaj iloœæ pieniêdzy do wyp³aty: ";
+                                cin >> amountOfMoney;
+                                depositWithdrawMoney(accounts, amountOfMoney, accountNumber, depositOrWithdraw);
+                                break;
+                        
+                            case 2: // sp³acanie po¿yczek
+                                if (loans == NULL) {
+                                    cout << "Akutalnie w bazie nie ma po¿yczek, dlatego funkcja wp³aty jest zablokowana.";
+                                    break;
+                                }
+                                cout << "WprowadŸ numer po¿yczki: ";
+                                cin >> loanNumber;
+                                check = checkLoanNumber(loanNumber, loans);
+                                while (!check) {
+                                    cout << "Nie ma po¿yczki o wprowadzonym numerze, chcesz przerwaæ ? (T - przerwaæ, N - kontynuuj)" << endl;
+                                    do {
+                                        breakKey = getchar();
+                                    } while (breakKey != 84 && breakKey != 116 && breakKey != 78 && breakKey != 110);
+                                    if (breakKey == 84 || breakKey == 116) break;
+                                    cout << "Podaj numer po¿yczki jeszcze raz: ";
+                                    cin >> loanNumber;
+                                    check = checkLoanNumber(loanNumber, loans);
+                                }
+                                cout << "Podaj iloœæ pieniêdzy do sp³aty: ";
+                                cin >> amountOfMoney;
+                                payBackLoan(loans, amountOfMoney, loanNumber);
+                                break;
+                            case 3: // wylogowanie u¿ytkownika
+                                login = "";
+                                loggedPerson = "";
+                                cout << "Nast¹pi³o wylogowanie.";
+                                break;
+                            default:
+                                cout << "Nie ma opcji o takim numerze";
+                                break;
                         }
                         // program czeka na ENTER aby u¿ytkownik móg³ zobaczyæ wynik na konsoli przed jej wyczyszczeniem
                         waitForEnter();
