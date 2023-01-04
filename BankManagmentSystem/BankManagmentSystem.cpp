@@ -4,11 +4,13 @@
 #include <winbase.h>
 #include <fstream>
 #include <ctime>
+#include <sstream>
 
 using namespace std;
 
 // zmienne globalne przechowuj¹ce id u¿ytkowników, kont i po¿yczek
 int personID = 1, accountID = 1, loanID = 1;
+string loggedPerson; // zmienna u¿ywana do ustalania uprawnieñ zalogowanego u¿ytkownika
 
 // struktura u¿ywana do przechowywania daty 
 struct Date {
@@ -154,6 +156,29 @@ bool checkLoanNumber(int loanNumber, pointerL loans) {
         }
         loans = loans->next;
     }
+    return false;
+}
+
+//funkcja sprawdzaj¹ca login i has³o podczas logowania
+bool checkLogin(string login, string password) {
+    fstream file;
+    file.open("login.txt");
+    string line, arr[3];
+    while (getline(file, line)) {
+        int i = 0;
+        stringstream line_tab(line);
+        while (getline(line_tab, arr[i], '\t')) {
+            i++;
+        }
+        if (login == arr[0] && password == arr[1]) {
+            if (arr[2] == "a")
+                loggedPerson = "admin";
+            else if (arr[2] == "u")
+                loggedPerson = "user";
+            return true;
+        }
+    }
+    cout << "Logowanie nie przesz³o pomyœlnie, spróbuj jeszcze raz." << endl;
     return false;
 }
 
@@ -478,7 +503,6 @@ int main()
 
     int loginOption = 0;
     string login, password; // zmienne u¿ywane do logowania
-    string loggedPerson; // zmienna u¿ywana do ustalania uprawnieñ zalogowanego u¿ytkownika
 
     // pobieranie danych z plików je¿eli takie istniej¹
     readPersonsFromFile(&persons);
@@ -496,22 +520,18 @@ int main()
         
         switch (loginOption) {
             case 1:
-                while (login != "admin" && login != "worker" && login != "user") {
+                check = false;
+                while (!check) {
                     cout << "Podaj login: ";
                     cin >> login;
-                    /*cout << "Podaj has³o: ";
-                    cin >> password;*/
-                    if (login == "admin") {
-                        loggedPerson = "admin";
-                    }
-                    else if (login == "user") {
-                        loggedPerson = "user";
-                    }
+                    cout << "Podaj has³o: ";
+                    cin >> password;
+                    check = checkLogin(login, password);
                 }
                 cout << "Logowanie przebieg³o pomyœlnie." << endl;
                 waitForEnter();
                 system("cls");
-                if (login == "admin") {
+                if (loggedPerson == "admin") {
                     // interfejs dla admin - menu
                     while (option != 10) {
                         cout << "SYSTEM ZARZ¥DZANIA BANKIEM" << endl;
@@ -641,7 +661,7 @@ int main()
                         system("cls");
                     }
                 }
-                else if (login == "user") {
+                else if (loggedPerson == "user") {
                     // interfejs dla u¿ytkownika - menu
                     while (option != 3) {
                         cout << "SYSTEM ZARZ¥DZANIA BANKIEM" << endl;
