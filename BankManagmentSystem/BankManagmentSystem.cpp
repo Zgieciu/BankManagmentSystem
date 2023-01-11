@@ -69,6 +69,23 @@ typedef Person* pointer;
 typedef Account* pointerA;
 typedef Loan* pointerL;
 
+// funkcja do odszyfrowania tekstu
+string decryption(string text, int shift) {
+    for (int i = 0; i < text.length(); i++)
+    {
+        if (text[i] >= 65 && text[i] <= 90) { // du¿e litery
+            text[i] -= shift;
+            if (text[i] < 65) text[i] += 26;
+        }
+        else if (text[i] >= 97 && text[i] <= 122) { // ma³e litery 
+            text[i] -= shift;
+            if (text[i] < 97) text[i] += 26;
+        }
+    }
+
+    return text;
+}
+
 // funkcja sprawdzaj¹ca poprawnoœæ daty podanej przez u¿ytkownika
 bool checkDate(int day, int month, int year) {
     SYSTEMTIME st;
@@ -166,6 +183,7 @@ bool checkLogin(string login, string password) {
     string line, arr[3];
     while (getline(file, line)) {
         int i = 0;
+        line = decryption(line, 5);
         stringstream line_tab(line);
         while (getline(line_tab, arr[i], '\t')) {
             i++;
@@ -525,6 +543,7 @@ int main()
                     cout << "Podaj login: ";
                     cin >> login;
                     cout << "Podaj has³o: ";
+                    
                     cin >> password;
                     check = checkLogin(login, password);
                 }
@@ -533,7 +552,7 @@ int main()
                 system("cls");
                 if (loggedPerson == "admin") {
                     // interfejs dla admin - menu
-                    while (option != 10) {
+                    while (option != 9) {
                         cout << "SYSTEM ZARZ¥DZANIA BANKIEM" << endl;
                         cout << "\n1.Dodaj u¿ytkownika";
                         cout << "\n2.Wyœwietl u¿ytkowników";
@@ -543,7 +562,7 @@ int main()
                         cout << "\n6.Wp³aæ / Wyp³aæ pieni¹dze";
                         cout << "\n7.Udziel po¿yczki";
                         cout << "\n8.Sp³aæ po¿yczkê";
-                        cout << "\n10.Wyloguj siê\n" << endl;
+                        cout << "\n9.Wyloguj siê\n" << endl;
 
                         cout << "Wybierz opcje: ";
                         cin >> option;
@@ -647,7 +666,7 @@ int main()
                                 cin >> amountOfMoney;
                                 payBackLoan(loans, amountOfMoney, loanNumber);
                                 break;
-                            case 10: // wylogowanie u¿ytkownika
+                            case 9: // wylogowanie u¿ytkownika
                                 login = "";
                                 loggedPerson = "";
                                 cout << "Nast¹pi³o wylogowanie.";
