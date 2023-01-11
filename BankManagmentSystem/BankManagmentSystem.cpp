@@ -519,8 +519,8 @@ int main()
     // amountOfMoney - zmienna przechowuj¹ca iloœc piêniêdzy 
     // loanNumber - zmienna przechowuj¹ca podany przez u¿ytkownika numer po¿yczki
 
-    int loginOption = 0;
-    string login, password; // zmienne u¿ywane do logowania
+    int loginOption = 0; // zmienna u¿ywana do wyboru opcji w menu logowania
+    string login, password; // zmienne u¿ywane do logowania: login przechowuje podany login, a password has³o
 
     // pobieranie danych z plików je¿eli takie istniej¹
     readPersonsFromFile(&persons);
